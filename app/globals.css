@@ -1,0 +1,448 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+/* ── BASE VARIABLES ── */
+:root {
+  --bg-primary: #090c14;
+  --bg-secondary: #0f1320;
+  --bg-card: #131929;
+  --bg-hover: #1a2235;
+
+  --border-subtle: #1e2a40;
+  --border-active: #2a3f6f;
+
+  --text-primary: #e8eaf0;
+  --text-secondary: #8892a4;
+  --text-muted: #4a566e;
+
+  --accent-blue: #3b7dd8;
+  --accent-blue-dim: #1e3a5f;
+  --accent-purple: #7c5cbf;
+  --accent-purple-dim: #2d1f4e;
+
+  --success: #22c55e;
+  --success-dim: #14532d;
+  --warning: #f59e0b;
+  --error: #ef4444;
+
+  --font-display: 'Space Mono', monospace;
+  --font-body: 'DM Sans', sans-serif;
+
+  --radius: 8px;
+  --radius-lg: 12px;
+
+  /* seasonal overrides — default empty */
+  --seasonal-accent: transparent;
+  --seasonal-glow: none;
+}
+
+/* ── SEASONAL THEMES ── */
+
+/* Christmas — Dec */
+[data-season="christmas"] {
+  --accent-blue: #22c55e;
+  --accent-blue-dim: #14532d;
+  --accent-purple: #ef4444;
+  --accent-purple-dim: #450a0a;
+  --seasonal-accent: rgba(34, 197, 94, 0.03);
+}
+
+/* Pride — June */
+[data-season="pride"] {
+  --seasonal-accent: transparent;
+}
+
+/* Halloween — Oct */
+[data-season="halloween"] {
+  --accent-blue: #f97316;
+  --accent-blue-dim: #431407;
+  --accent-purple: #a855f7;
+  --accent-purple-dim: #2e1065;
+  --seasonal-accent: rgba(249, 115, 22, 0.03);
+}
+
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border-active); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-blue); }
+
+/* ── TYPOGRAPHY ── */
+h1, h2, h3 { font-family: var(--font-display); }
+
+/* ── GRID BG ── */
+.grid-bg {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(59,125,216,0.07) 1px, transparent 0);
+  background-size: 28px 28px;
+}
+
+/* ── SNOW (Christmas only) ── */
+.snowflake {
+  position: fixed;
+  top: -10px;
+  color: #fff;
+  font-size: 1em;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 999;
+  animation: fall linear infinite;
+}
+
+@keyframes fall {
+  0%   { opacity: 0.7; transform: translateY(0) rotate(0deg); }
+  100% { opacity: 0;   transform: translateY(100vh) rotate(360deg); }
+}
+
+/* ── PRIDE LOGO GRADIENT ── */
+.pride-text {
+  background: linear-gradient(
+    90deg,
+    #ff0018 0%,
+    #ffa52c 17%,
+    #ffff41 34%,
+    #008018 50%,
+    #0000f9 67%,
+    #86007d 84%,
+    #ff76a1 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.card-header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ── BUTTON ── */
+.btn {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border: none;
+  border-radius: var(--radius);
+  padding: 10px 24px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-transform: uppercase;
+}
+
+.btn-primary {
+  background: var(--accent-blue);
+  color: #fff;
+  box-shadow: 0 0 16px rgba(59,125,216,0.25);
+}
+.btn-primary:hover { filter: brightness(1.15); }
+.btn-primary:disabled {
+  background: var(--bg-hover);
+  color: var(--text-muted);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+.btn-ghost:hover {
+  border-color: var(--border-active);
+  color: var(--text-primary);
+}
+
+/* ── CHECKBOX STEP ── */
+.step-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+.step-row:last-child { border-bottom: none; }
+.step-row:hover { background: var(--bg-hover); }
+.step-row.selected { background: var(--accent-blue-dim); }
+.step-row.done { background: rgba(34,197,94,0.05); }
+
+.step-checkbox {
+  width: 18px; height: 18px;
+  border-radius: 4px;
+  border: 2px solid var(--border-active);
+  background: transparent;
+  flex-shrink: 0;
+  margin-top: 2px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.step-checkbox.checked {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+.step-text {
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.6;
+  flex: 1;
+}
+.step-text.done {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+/* ── EDIT PANEL ── */
+.edit-panel {
+  margin: 8px 16px;
+  background: var(--accent-blue-dim);
+  border: 1px solid var(--border-active);
+  border-radius: var(--radius);
+  padding: 12px;
+  animation: slideDown 0.15s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.edit-panel textarea {
+  width: 100%;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 8px 12px;
+  resize: vertical;
+  outline: none;
+  min-height: 64px;
+}
+.edit-panel textarea:focus { border-color: var(--accent-blue); }
+
+/* ── PROGRESS BAR ── */
+.progress-bar {
+  height: 4px;
+  background: var(--border-subtle);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+/* ── INPUT ── */
+.input {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 10px 14px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+.input:focus { border-color: var(--accent-blue); }
+.input::placeholder { color: var(--text-muted); }
+
+/* ── ADMIN PANEL ── */
+.admin-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; } to { opacity: 1; }
+}
+
+.admin-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-active);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  width: min(420px, 90vw);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+}
+
+.color-swatch {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--border-subtle);
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.color-swatch:hover {
+  transform: scale(1.15);
+  border-color: var(--text-primary);
+}
+.color-swatch.active { border-color: #fff; transform: scale(1.15); }
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 20px;
+}
+.tab {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-transform: uppercase;
+}
+.tab:hover { color: var(--text-primary); }
+.tab.active {
+  color: var(--accent-blue);
+  border-bottom-color: var(--accent-blue);
+}
+
+/* ── LOADING DOTS ── */
+.loading-dots span {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  margin: 0 3px;
+  animation: bounce 1.2s infinite;
+}
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40%            { transform: translateY(-6px); opacity: 1; }
+}
+
+/* ── TOOLTIP ── */
+.tooltip {
+  position: absolute;
+  top: -28px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ── FADE IN ANIMATION ── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeInUp 0.3s ease both; }
+
+/* ── PRINT / PDF ── */
+@media print {
+  .grid-bg,
+  .tabs,
+  header nav,
+  .btn,
+  .edit-panel,
+  details summary { display: none !important; }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-family: 'Courier New', monospace !important;
+  }
+
+  .pdf-header {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid #000;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+  }
+
+  .pdf-only { display: block !important; }
+  .no-print { display: none !important; }
+
+  .card {
+    border: 1px solid #ccc !important;
+    background: #fff !important;
+    break-inside: avoid;
+    margin-bottom: 16px;
+  }
+
+  .step-row {
+    border-bottom: 1px solid #eee !important;
+    background: #fff !important;
+    padding: 8px 12px !important;
+  }
+
+  .step-text {
+    color: #000 !important;
+    font-family: 'Courier New', monospace !important;
+    font-size: 11px !important;
+  }
+
+  .step-checkbox {
+    border: 1px solid #000 !important;
+    background: #fff !important;
+  }
+
+  .progress-bar { display: none !important; }
+
+  a { color: #000 !important; }
+
+  @page {
+    margin: 1.5cm;
+    size: A4;
+  }
+}
+
+.pdf-header { display: none; }
+.pdf-only { display: none; }
