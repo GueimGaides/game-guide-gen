@@ -5,17 +5,20 @@ A free, no-account video game guide generator.
 User types a game + goal, AI generates a structured guide.
 Checklist system with localStorage save + shareable codes.
 Partial step editing — click a step to refine just that part.
-PDF download via browser print.
+PDF download via generated HTML + window.print().
+
+## LIVE URL
+https://game-guide-gen.vercel.app
 
 ## Stack
 - Next.js 16 + TypeScript
-- Vercel (free hosting, not deployed yet)
+- Vercel (free hosting, deployed and live)
 - Gemini 2.5 Flash API (free tier, MX region confirmed working)
 - No database — localStorage only
 
 ## Repo
-GitHub user: GueimGaides
-(not pushed to GitHub yet)
+GitHub: github.com/GueimGaides/game-guide-gen
+Push changes: git add . → git commit -m "message" → git push
 
 ## File structure
 app/
@@ -24,16 +27,18 @@ app/
 │   ├── refine/route.ts     — partial step editing endpoint
 │   └── admin/auth/route.ts — admin panel password check
 ├── components/
-│   ├── GuideDisplay.tsx    — full guide UI with checklist + PDF
+│   ├── GuideDisplay.tsx    — full guide UI, checklist, PDF
 │   ├── AdminPanel.tsx      — secret admin color/theme panel
 │   └── SeasonalTheme.tsx   — seasonal CSS themes
+├── about/page.tsx          — legal disclaimers page
 ├── globals.css             — CSS variables + print stylesheet
 ├── layout.tsx              — suppressHydrationWarning added
 └── page.tsx                — main page
 CONTEXT.md                  — this file
 
 ## Security
-- API key server-side only in .env.local
+- API keys server-side only in .env.local / Vercel env vars
+- 3 API keys with automatic fallback on 429
 - Unicode normalization before injection scanning
 - System prompt separated from user data
 - Output structure validated before sending to frontend
@@ -51,33 +56,47 @@ CONTEXT.md                  — this file
 - Step text uses monospace font (GameFAQs style)
 
 ## Features complete
-- Any game, no content gatekeeping
+- Any game accepted, no content gatekeeping
+- Adult games allowed — shows "not enough info" if nothing found
 - Auto browser language + manual override (11 languages)
+- Guide + game + goal saved to localStorage on generation
+- Guide persists on page refresh
 - Click step → edit panel → AI refines just that step
 - Partial regen — affectedSteps returned for cascading changes
 - Triple Shift → admin panel (password protected)
 - Admin: color presets, custom pickers, undo x5, seasonal override
 - localStorage auto-save (guide + progress + colors)
 - Save code (base64, 32 chars) for cross-device transfer
-- PDF download via window.print() with print stylesheet
-- Save code embedded in PDF header
+- PDF download — generates clean standalone HTML, auto-prints
+- PDF filename: "GueimGaides - {game}"
+- PDF includes header, all sections, items, tips, save code, footer
 - Steps have optional hint field (collapsible 💡)
-- Linear game detection in prompt — focuses on missables/secrets
+- Linear game detection — focuses on missables/secrets
+- RPG depth — levels, movesets, equipment, boss strategies
+- Long guide scope limiting with user message to split request
 - Pride gradient logo in June
 - suppressHydrationWarning (Dark Reader extension compat)
+- /about page with AI disclaimer, content notice, no-warranty, privacy
 
-## Trusted image domains
+## Trusted image/guide domains
 bulbapedia.bulbagarden.net, cdn.bulbagarden.net, serebii.net,
 gamefaqs.gamespot.com, wiki.fandom.com, psnprofiles.com,
-ign.com, strategywiki.org, neoseeker.com, static.wikia.nocookie.net
+ign.com, strategywiki.org, neoseeker.com, static.wikia.nocookie.net,
+gamepressure.com, powerpyx.com, trueachievements.com, truetrophies.com
 
-## .env.local variables
-GEMINI_API_KEY=their_key
-ADMIN_PASSWORD=their_password
+## .env.local / Vercel environment variables
+GEMINI_API_KEY=first key
+GEMINI_API_KEY_2=second key
+GEMINI_API_KEY_3=third key
+ADMIN_PASSWORD=password
+
+## Known issues
+- Step refinement occasionally fails (Gemini inconsistency)
+- Very long guide requests still timeout sometimes
+- Images rarely show (wiki URLs change frequently)
 
 ## Still to do
-- Push to GitHub
-- Deploy to Vercel
-- Add tutorial (first visit overlay, highlights each UI element)
-- Validate image URLs server-side before sending to frontend
+- First visit tutorial overlay
+- Image URL validation server-side before sending to frontend
+- Chunked generation for very long guides (e.g. full MH Freedom run)
 - Test on mobile
