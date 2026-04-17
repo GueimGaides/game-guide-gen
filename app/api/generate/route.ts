@@ -376,9 +376,22 @@ Keep each step to 2-4 sentences with specific and concise details.
 
     // Filter images — only whitelisted domains pass
     if (guide.images && Array.isArray(guide.images)) {
-      guide.images = guide.images.filter((img) =>
-        validateImageUrl(img.url)
+      const validatedImages = await Promise.all(
+        guide.images
+          .filter((img) => validateImageUrl(img.url))
+          .map(async (img) => {
+            try {
+              const check = await fetch(img.url, {
+                method: "HEAD",
+                signal: AbortSignal.timeout(3000),
+              });
+              return check.ok ? img : null;
+            } catch {
+              return null;
+            }
+          })
       );
+      guide.images = validatedImages.filter(Boolean) as typeof guide.images;
     }
 
     return NextResponse.json({ guide });

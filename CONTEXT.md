@@ -96,7 +96,7 @@ ADMIN_PASSWORD=password
 - Images rarely show (wiki URLs change frequently)
 
 ## Still to do
-- First visit tutorial overlay
-- Image URL validation server-side before sending to frontend
-- Chunked generation for very long guides (e.g. full MH Freedom run)
-- Test on mobile
+- Image URL validation server-side via HEAD requests ← NEXT
+- Tutorial first visit overlay (Option A spotlight or Option B banner — decide)
+- Chunked generation for very long guides
+- Seasonal theme page.tsx and GuideDisplay.tsx changes (globals.css done)

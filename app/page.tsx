@@ -200,9 +200,16 @@ export default function Home() {
               letterSpacing: "1px",
               lineHeight: 1,
             }}
-              className={season === "pride" ? "pride-text" : ""}
+              className={
+                season === "pride" ? "pride-text" :
+                season === "christmas" ? "logo-christmas" :
+                season === "halloween" ? "logo-halloween" :
+                ""
+              }
             >
-              GUEIMGAIDES
+              {season === "christmas" ? "❄ GUEIMGAIDES" :
+              season === "halloween" ? "🎃 GUEIMGAIDES" :
+              "GUEIMGAIDES"}
             </h1>
           </div>
 

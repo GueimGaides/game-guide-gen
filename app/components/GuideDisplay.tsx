@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { getCurrentSeason } from "./SeasonalTheme";
 
 // --- TYPES ---
 interface Step {
@@ -518,7 +519,10 @@ function handlePrint() {
             </div>
           </div>
           <div className="progress-bar">
-            <div className="progress-fill" style={{ width: `${pct}%` }} />
+            <div
+              className={getCurrentSeason() === "pride" ? "progress-fill-pride" : "progress-fill"}
+              style={{ width: `${pct}%` }}
+            />
           </div>
         </div>
       </div>
