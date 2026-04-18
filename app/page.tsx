@@ -4,6 +4,7 @@ import GuideDisplay, { Guide } from "./components/GuideDisplay";
 import AdminPanel, { loadSavedColors } from "./components/AdminPanel";
 import SeasonalTheme, { getCurrentSeason } from "./components/SeasonalTheme";
 import Link from "next/link";
+import TutorialOverlay from "./components/TutorialOverlay";
 
 const LANGUAGES = [
   { code: "en", label: "English" },
@@ -162,7 +163,7 @@ export default function Home() {
   return (
     <>
       <SeasonalTheme />
-
+      <TutorialOverlay />
       {/* Admin panel */}
       {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
 
@@ -215,6 +216,7 @@ export default function Home() {
 
           {/* Language selector */}
           <select
+            id="gg-lang"
             value={language}
             onChange={(e) => handleLanguageChange(e.target.value)}
             style={{
@@ -268,10 +270,11 @@ export default function Home() {
                   Game
                 </label>
                 <input
+                  id="gg-name"
                   className="input"
                   value={game}
                   onChange={(e) => setGame(e.target.value)}
-                  placeholder="e.g. Pokémon Platinum, SMT IV, Persona 3 Portable..."
+                  placeholder="e.g. Pokemon, SMT, Golden Sun..."
                   disabled={loading}
                   onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
                 />
@@ -286,6 +289,7 @@ export default function Home() {
                   Goal
                 </label>
                 <input
+                  id="gg-goal"
                   className="input"
                   value={goal}
                   onChange={(e) => setGoal(e.target.value)}
@@ -308,6 +312,7 @@ export default function Home() {
               )}
 
               <button
+                id="gg-generate"
                 className="btn btn-primary"
                 onClick={handleGenerate}
                 disabled={loading}
