@@ -97,23 +97,10 @@ ADMIN_PASSWORD=password
 - Very long guide requests still timeout sometimes
 - Images rarely show (wiki URLs change frequently)
 
-## In progress — STREAMING GENERATION
-Decision made: implement streaming to improve UX
-
-### Streaming plan:
-Problem: current flow waits 15-25s then dumps entire guide at once.
-Goal: text appears progressively as Gemini generates it.
-
 Challenge: we use JSON responses which cant be parsed mid-stream.
 Solution: two-phase approach:
   Phase 1 — stream raw text to frontend, show animated preview
   Phase 2 — when stream ends, parse JSON and render full guide
-
-### Files that change:
-- app/api/generate/route.ts — switch to streaming Gemini API,
-  return ReadableStream instead of NextResponse.json()
-- app/page.tsx — read stream chunks, show streaming preview UI,
-  parse final JSON when done
 
 ### Gemini streaming endpoint:
 Same URL but use generateContentStream instead of generateContent.
@@ -133,6 +120,4 @@ while(true) {
 // then parse JSON from fullText
 
 ## Still to do
-- Implement streaming (NEXT)
-- Recursive outlining for very long guides (after streaming)
 - Test on more games for accuracy
