@@ -43,6 +43,8 @@ interface GuideDisplayProps {
   game: string;
   goal: string;
   language: string;
+  onContinue: () => void;
+  isContinuing: boolean;
 }
 
 const STORAGE_KEY = "gg_progress_v1";
@@ -80,6 +82,8 @@ export default function GuideDisplay({
   game,
   goal,
   language,
+  onContinue,
+  isContinuing,
 }: GuideDisplayProps) {
   const [checked, setChecked] = useState<Record<string, boolean>>(
     loadProgress
@@ -964,6 +968,34 @@ function handlePrint() {
           </div>
         </div>
       )}
+      {/* Generate next part button */}
+      <div style={{
+        textAlign: "center",
+        padding: "24px 0 8px",
+      }}>
+        <div style={{
+          fontSize: "12px",
+          color: "var(--text-muted)",
+          marginBottom: "12px",
+          fontFamily: "var(--font-display)",
+        }}>
+          Want more? Generate the next part of the guide.
+        </div>
+        <button
+          className="btn btn-ghost"
+          onClick={onContinue}
+          disabled={isContinuing}
+          style={{
+            fontSize: "12px",
+            borderColor: "var(--accent-blue)",
+            color: "var(--accent-blue)",
+          }}
+        >
+          {isContinuing
+            ? "⏳ Generating next part..."
+            : "▶ Generate Next Part"}
+        </button>
+      </div>
     </div>
   );
 }

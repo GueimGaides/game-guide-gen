@@ -58,6 +58,8 @@ export default function Home() {
   const shiftCount = useRef(0);
   const shiftTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const season = getCurrentSeason();
+  const [isContinuing, setIsContinuing] = useState(false);
+  const [streamPreview, setStreamPreview] = useState("");
 
   // Load language on mount + apply saved colors
   useEffect(() => {
@@ -106,7 +108,7 @@ export default function Home() {
     localStorage.setItem("gg_language", code);
   }
 
-  async function handleGenerate() {
+    async function handleGenerate() {
     if (!game.trim() || !goal.trim()) {
       setError("Please fill in both fields.");
       return;
@@ -115,6 +117,7 @@ export default function Home() {
     setLoading(true);
     setError("");
     setGuide(null);
+    setStreamPreview("");
 
     try {
       const res = await fetch("/api/generate", {
@@ -127,36 +130,172 @@ export default function Home() {
         }),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
+      if (!res.ok || !res.body) {
+        const data = await res.json();
         setError(data.error ?? "Something went wrong.");
         return;
       }
 
-      if (data.guide.notEnoughInfo) {
-        setError(
-          "Not enough reliable information found for this game and goal. Try being more specific, or this game may not have enough documented guides yet."
-        );
-        return;
-      }
+      // Read stream
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
 
-      setGuide(data.guide);
-      localStorage.setItem("gg_last_guide", JSON.stringify({
-        guide: data.guide,
-        game: game.trim(),
-        goal: goal.trim(),
-      }));
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const parsed = JSON.parse(line.slice(6));
+
+            if (parsed.error) {
+              setError(parsed.error);
+              setLoading(false);
+              return;
+            }
+
+            if (parsed.chunk) {
+              // Show raw text while generating
+              setStreamPreview((prev) => prev + parsed.chunk);
+            }
+
+            if (parsed.guide) {
+              // Final guide received
+              if (parsed.guide.notEnoughInfo) {
+                setError(
+                  "Not enough reliable information found. Try being more specific."
+                );
+                setLoading(false);
+                setStreamPreview("");
+                return;
+              }
+              setGuide(parsed.guide);
+              setStreamPreview("");
+              localStorage.setItem(
+                "gg_last_guide",
+                JSON.stringify({
+                  guide: parsed.guide,
+                  game: game.trim(),
+                  goal: goal.trim(),
+                })
+              );
+            }
+          } catch {
+            // Skip malformed lines
+          }
+        }
+      }
     } catch (err: unknown) {
       if (err instanceof Error && err.message.includes("504")) {
         setError(
-          "This guide is too large to generate at once. Try narrowing your goal or ask for specific sections and then ask me to generate the next section separately next."
+          "This guide is too large to generate at once. Try narrowing your goal."
         );
         return;
       }
       setError("Network error. Check your connection and try again.");
     } finally {
       setLoading(false);
+      setStreamPreview("");
+    }
+  }
+  async function handleContinue() {
+    if (!guide) return;
+    setIsContinuing(true);
+    setError("");
+
+    // Build context string from existing sections
+    const existingSections = guide.sections
+      .map((s) => `- ${s.label} (${s.badge})`)
+      .join("\n");
+
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          game: game.trim(),
+          goal: goal.trim(),
+          language,
+          continuation: existingSections,
+        }),
+      });
+
+      if (!res.ok || !res.body) {
+        const data = await res.json();
+        setError(data.error ?? "Something went wrong.");
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const parsed = JSON.parse(line.slice(6));
+
+            if (parsed.error) {
+              setError(parsed.error);
+              return;
+            }
+
+            if (parsed.guide) {
+              // Merge new sections into existing guide
+              const merged = {
+                ...guide,
+                sections: [
+                  ...guide.sections,
+                  ...parsed.guide.sections,
+                ],
+                keyItems: [
+                  ...guide.keyItems,
+                  ...parsed.guide.keyItems.filter(
+                    (newItem: { id: string }) =>
+                      !guide.keyItems.some((existing) => existing.id === newItem.id)
+                  ),
+                ],
+                tips: [
+                  ...guide.tips,
+                  ...parsed.guide.tips.filter(
+                    (tip: string) => !guide.tips.includes(tip)
+                  ),
+                ],
+              };
+
+              setGuide(merged);
+              localStorage.setItem(
+                "gg_last_guide",
+                JSON.stringify({
+                  guide: merged,
+                  game: game.trim(),
+                  goal: goal.trim(),
+                })
+              );
+            }
+          } catch {
+            // skip malformed lines
+          }
+        }
+      }
+    } catch {
+      setError("Network error. Try again.");
+    } finally {
+      setIsContinuing(false);
     }
   }
 
@@ -327,14 +466,34 @@ export default function Home() {
               <div style={{
                 borderTop: "1px solid var(--border-subtle)",
                 padding: "16px 20px",
-                display: "flex", alignItems: "center", gap: "12px",
               }}>
-                <div className="loading-dots">
-                  <span /><span /><span />
+                <div style={{
+                  display: "flex", alignItems: "center", gap: "12px",
+                  marginBottom: streamPreview ? "12px" : "0",
+                }}>
+                  <div className="loading-dots">
+                    <span /><span /><span />
+                  </div>
+                  <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                    {streamPreview
+                      ? "Generating guide..."
+                      : "Searching wikis and community sources..."}
+                  </span>
                 </div>
-                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                  Searching guides, wikis and community sources...
-                </span>
+                {streamPreview && (
+                  <div style={{
+                    background: "var(--bg-secondary)",
+                    border: "1px solid var(--border-subtle)",
+                    borderRadius: "var(--radius)",
+                    padding: "12px",
+                    fontFamily: "var(--font-display)",
+                    fontSize: "11px",
+                    color: "var(--accent-blue)",
+                    lineHeight: "1.6",
+                  }}>
+                    ▋ Building your guide... {Math.floor(streamPreview.length / 50)} sections processed
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -346,6 +505,8 @@ export default function Home() {
               game={game}
               goal={goal}
               language={language}
+              onContinue={handleContinue}
+              isContinuing={isContinuing}
             />
           )}
 

@@ -18,7 +18,6 @@ https://game-guide-gen.vercel.app
 
 ## Repo
 GitHub: github.com/GueimGaides/game-guide-gen
-Push changes: git add . → git commit -m "message" → git push
 
 ## File structure
 app/
@@ -29,7 +28,8 @@ app/
 ├── components/
 │   ├── GuideDisplay.tsx    — full guide UI, checklist, PDF
 │   ├── AdminPanel.tsx      — secret admin color/theme panel
-│   └── SeasonalTheme.tsx   — seasonal CSS themes
+│   ├── SeasonalTheme.tsx   — seasonal CSS themes
+│   └── TutorialOverlay.tsx — first visit tutorial spotlight
 ├── about/page.tsx          — legal disclaimers page
 ├── globals.css             — CSS variables + print stylesheet
 ├── layout.tsx              — suppressHydrationWarning added
@@ -37,12 +37,11 @@ app/
 CONTEXT.md                  — this file
 
 ## Security
-- API keys server-side only in .env.local / Vercel env vars
-- 3 API keys with automatic fallback on 429
+- API keys server-side only in Vercel env vars
 - Unicode normalization before injection scanning
 - System prompt separated from user data
 - Output structure validated before sending to frontend
-- Image URLs whitelisted to trusted domains only
+- Image URLs whitelisted + HEAD request validated
 - Rate limit: 5 req/min generate, 10 req/min refine
 - Admin auth: 5 attempts per 15 min, constant-time comparison
 - Temperature: 0.2
@@ -51,8 +50,10 @@ CONTEXT.md                  — this file
 - Dark theme only
 - Colors: #090c14 base, #3b7dd8 blue, #7c5cbf purple
 - Fonts: Space Mono (display/steps), DM Sans (body)
-- Seasonal: Christmas (Dec/Jan), Pride (June), Halloween (Oct)
-- Snow is CSS only
+- Seasonal themes done in globals.css:
+  Christmas: dark green-black bg, green logo, snow
+  Halloween: dark purple-black bg, orange logo
+  Pride: rainbow logo gradient, rainbow progress bar
 - Step text uses monospace font (GameFAQs style)
 
 ## Features complete
@@ -63,8 +64,6 @@ CONTEXT.md                  — this file
 - Guide persists on page refresh
 - Click step → edit panel → AI refines just that step
 - Partial regen — affectedSteps returned for cascading changes
-- Triple Shift → admin panel (password protected)
-- Admin: color presets, custom pickers, undo x5, seasonal override
 - localStorage auto-save (guide + progress + colors)
 - Save code (base64, 32 chars) for cross-device transfer
 - PDF download — generates clean standalone HTML, auto-prints
@@ -77,6 +76,9 @@ CONTEXT.md                  — this file
 - Pride gradient logo in June
 - suppressHydrationWarning (Dark Reader extension compat)
 - /about page with AI disclaimer, content notice, no-warranty, privacy
+- First visit tutorial overlay (spotlight style, 4 steps)
+- Image URL server-side HEAD request validation
+- Seasonal theme full implementation (bg, logo, borders per season)
 
 ## Trusted image/guide domains
 bulbapedia.bulbagarden.net, cdn.bulbagarden.net, serebii.net,
@@ -95,8 +97,42 @@ ADMIN_PASSWORD=password
 - Very long guide requests still timeout sometimes
 - Images rarely show (wiki URLs change frequently)
 
+## In progress — STREAMING GENERATION
+Decision made: implement streaming to improve UX
+
+### Streaming plan:
+Problem: current flow waits 15-25s then dumps entire guide at once.
+Goal: text appears progressively as Gemini generates it.
+
+Challenge: we use JSON responses which cant be parsed mid-stream.
+Solution: two-phase approach:
+  Phase 1 — stream raw text to frontend, show animated preview
+  Phase 2 — when stream ends, parse JSON and render full guide
+
+### Files that change:
+- app/api/generate/route.ts — switch to streaming Gemini API,
+  return ReadableStream instead of NextResponse.json()
+- app/page.tsx — read stream chunks, show streaming preview UI,
+  parse final JSON when done
+
+### Gemini streaming endpoint:
+Same URL but use generateContentStream instead of generateContent.
+Response is Server-Sent Events (SSE) format.
+Parse each chunk: data.candidates[0].content.parts[0].text
+
+### Frontend streaming read pattern:
+const reader = response.body.getReader()
+const decoder = new TextDecoder()
+let fullText = ""
+while(true) {
+  const {done, value} = await reader.read()
+  if(done) break
+  fullText += decoder.decode(value)
+  setStreamPreview(fullText) // show raw text while generating
+}
+// then parse JSON from fullText
+
 ## Still to do
-- Image URL validation server-side via HEAD requests ← NEXT
-- Tutorial first visit overlay (Option A spotlight or Option B banner — decide)
-- Chunked generation for very long guides
-- Seasonal theme page.tsx and GuideDisplay.tsx changes (globals.css done)
+- Implement streaming (NEXT)
+- Recursive outlining for very long guides (after streaming)
+- Test on more games for accuracy
